@@ -7,14 +7,14 @@ import Home from './buttomnavbar/page';
 
 import CountUp from 'react-countup';
 
-import { useUserStore } from "../Auto_coin/Api";
+
 
 
 
 export default function WalletPage() {
 
 
-  const { name, balance, coin, type, action } = useUserStore();
+
 
 
   //   const { name, balance, coin, setUser  } = useUserStore();
@@ -26,11 +26,7 @@ export default function WalletPage() {
   //     balance: 500,
   //     coin: 1500,
  
-action({
-  type:'Rashid', 
-  name: "Rashidul",
-    balance: 500, 
-    coin: 1000 });
+
 
 
 };
@@ -128,18 +124,10 @@ setCoin(cojs);
      onClick={handleSend}
           className="mt-6 bg-gradient-to-r from-orange-500 to-orange-400 px-8 py-3 rounded-full text-white font-semibold shadow-lg focus:outline-none focus:ring-4 focus:ring-orange-300"
         >
-          My Wallet
+            🛒 My Orders
         </motion.button>
  
-        <div className="mt-6 space-y-2 p-4 border rounded bg-gray-100">
-      
-          <p>👤 Name: {name}</p>
-          <p>💰 Balance: {balance}</p>
-          <p>🪙 Coin: {coin}</p>
-     
-        
-        </div>
-
+       
 
    {/* {status && (
         <div className="mt-6 p-4 border rounded bg-gray-100">
