@@ -337,6 +337,8 @@ export default function PremiumRCoinSim() {
 
     return (
       <div className="space-y-2">
+
+        {livePrice} 
         <input
           value={from}
           onChange={(e) => setFrom(e.target.value)}

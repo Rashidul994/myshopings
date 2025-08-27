@@ -8,7 +8,7 @@ export default function Buttom() {
 
 
 <div className="fixed bottom-0 inset-x-0 md:hidden bg-white dark:bg-gray-900 p-4 border-t shadow-lg">
-  <Button className="w-full">Add to Cart</Button>
+  <div className="w-full">Add to Cart</div>
 </div>
 
 

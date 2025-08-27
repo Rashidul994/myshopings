@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect,  useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
+ 
 // ---------------- Shared UI ----------------
 function Chip({ label, active, onClick }) {
   return (

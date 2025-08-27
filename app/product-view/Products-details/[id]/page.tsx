@@ -1,49 +1,58 @@
-// app/product/[slug]/page.tsx
-import { Metadata } from 'next'
-import Image from 'next/image'
 
-// ✅ Dummy API Function (তুমি তোমার Laravel API বসাবে এখানে)
-async function getProduct(slug: string) {
-  const res = await fetch(`https://your-api.com/api/product/${slug}`, { next: { revalidate: 60 } })
-  if (!res.ok) throw new Error('Product not found')
-  return res.json()
+import React from 'react'
+
+export default function page() {
+  return (
+    <div>product view</div>
+  )
 }
 
-// ✅ SEO Metadata Function
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const product = await getProduct(params.slug)
+// // app/product/[slug]/page.tsx
+// import { Metadata } from 'next'
 
-  return {
-    title: `${product.name} কিনুন সেরা দামে | BanglaShop`,
-    description: product.description?.slice(0, 150) || 'পণ্যের বিবরণ পাওয়া যায়নি।',
-    keywords: [product.name, product.category, 'বাংলা ইকমার্স', 'অনলাইন শপিং'],
-    alternates: {
-      canonical: `https://example.com/product/${params.slug}`,
-    },
-    openGraph: {
-      title: product.name,
-      description: product.description?.slice(0, 150),
-      url: `https://example.com/product/${params.slug}`,
-      images: [
-        {
-          url: product.image || 'https://example.com/default.jpg',
-          width: 1200,
-          height: 630,
-          alt: product.name,
-        },
-      ],
-      siteName: 'BanglaShop',
-      locale: 'bn_BD',
-      type: 'product',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: product.name,
-      description: product.description?.slice(0, 150),
-      images: [product.image],
-    },
-  }
-}
+
+// // ✅ Dummy API Function (তুমি তোমার Laravel API বসাবে এখানে)
+// async function getProduct(slug: string) {
+//   const res = await fetch(`https://your-api.com/api/product/${slug}`, { next: { revalidate: 60 } })
+//   if (!res.ok) throw new Error('Product not found')
+//   return res.json()
+// }
+
+// // ✅ SEO Metadata Function
+// export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+//   const product = await getProduct(params.slug)
+
+//   return {
+//     title: `${product.name} কিনুন সেরা দামে | BanglaShop`,
+//     description: product.description?.slice(0, 150) || 'পণ্যের বিবরণ পাওয়া যায়নি।',
+//     keywords: [product.name, product.category, 'বাংলা ইকমার্স', 'অনলাইন শপিং'],
+//     alternates: {
+//       canonical: `https://example.com/product/${params.slug}`,
+//     },
+//     openGraph: {
+//       title: product.name,
+//       description: product.description?.slice(0, 150),
+//       url: `https://example.com/product/${params.slug}`,
+//       images: [
+//         {
+//           url: product.image || 'https://example.com/default.jpg',
+//           width: 1200,
+//           height: 630,
+//           alt: product.name,
+//         },
+//       ],
+//       siteName: 'BanglaShop',
+//       locale: 'bn_BD',
+//       type: 'product',
+//     },
+//     twitter: {
+//       card: 'summary_large_image',
+//       title: product.name,
+//       description: product.description?.slice(0, 150),
+//       images: [product.image],
+//     },
+//   }
+// }
 
 
 

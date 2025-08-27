@@ -57,8 +57,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-import ImgIcon from '../../../public/Icon/rcoin.png'
-import { url } from 'inspector';
+
 
 export default function BalanceCard() {
   const [show, setShow] = useState(false);

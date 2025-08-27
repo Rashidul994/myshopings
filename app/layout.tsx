@@ -7,11 +7,7 @@ import { Toaster } from "react-hot-toast";
 import Animates from './animations/Ant'
 
 
-import Anima from './bbb/page'
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -20,7 +16,7 @@ const geistMono = Geist_Mono({
     
    
 
-export const metadata = {
+export const Metadata = {
   title: 'বাংলা ই-কমার্স | সেরা পণ্য কিনুন',
   description: 'বাংলাদেশের সবচেয়ে নির্ভরযোগ্য অনলাইন শপিং প্ল্যাটফর্ম।',
   keywords: ['বাংলা ই-কমার্স', 'অনলাইন শপিং', 'পণ্য', 'ডিসকাউন্ট'],

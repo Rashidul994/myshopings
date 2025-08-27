@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Search, BarChart2, Car, Settings, Bell,ScanIcon ,User, Lock, CreditCard, LogOut } from "lucide-react";
+import { Home, Search, BarChart2, Settings, Bell,ScanIcon ,User, Lock, CreditCard, LogOut } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export default function ColorfulBottomNavbar() {

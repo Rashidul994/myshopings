@@ -1,149 +1,69 @@
-// import axios from 'axios';
-
-// const Api = axios.create({
-//   baseURL: 'http://localhost:8000/Api/', // 🔁 এখানেই base URL সেট করবেন
-//   headers: {
-//     'Content-Type': 'application/json',
-//   },
-// });
-
-// export default Api;
-
-
-
-
-
-
-// "use client";
-// import { useEffect, useState } from "react";
-// import { getItems, createItem, updateItem, deleteItem } from "@/lib/Api";
-
-// export default function CrudExample() {
-//   const [items, setItems] = useState<any[]>([]);
-
-//   // সব ডাটা লোড করা
-//   useEffect(() => {
-//     fetchItems();
-//   }, []);
-
-//   const fetchItems = async () => {
-//     const data = await getItems();
-//     setItems(data);
-//   };
-
-//   // নতুন ডাটা যোগ করা
-//   const addItem = async () => {
-//     await createItem({ name: "New Item", price: 100 });
-//     fetchItems();
-//   };
-
-//   // ডাটা আপডেট
-//   const editItem = async (id: number) => {
-//     await updateItem(id, { name: "Updated Item", price: 200 });
-//     fetchItems();
-//   };
-
-//   // ডাটা ডিলিট
-//   const removeItem = async (id: number) => {
-//     await deleteItem(id);
-//     fetchItems();
-//   };
-
-//   return (
-//     <div>
-//       <h1>CRUD Example</h1>
-//       <button onClick={addItem}>➕ Add Item</button>
-
-//       <ul>
-//         {items.map((item: any) => (
-//           <li key={item.id}>
-//             {item.name} - {item.price}{" "}
-//             <button onClick={() => editItem(item.id)}>✏️ Edit</button>
-//             <button onClick={() => removeItem(item.id)}>🗑️ Delete</button>
-//           </li>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // lib/Api.ts
 import axios from "axios";
 
+// 🔗 Laravel API Base Instance
 const Api = axios.create({
-  baseURL: "http://localhost:8000/api", // Laravel Api base url
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api", 
   headers: {
     "Content-Type": "application/json",
+    Accept: "application/json",
   },
 });
 
+/* =====================
+   📦 Item APIs
+   ===================== */
+
 // ✅ GET (সব ডাটা আনা)
 export const getItems = async () => {
-  const response = await Api.get("/items");
-  return response.data;
+  const { data } = await Api.get("/items");
+  return data;
 };
 
 // ✅ GET (একটা ডাটা আনা by ID)
 export const getItemById = async (id: number | string) => {
-  const response = await Api.get(`/items/${id}`);
-  return response.data;
+  const { data } = await Api.get(`/items/${id}`);
+  return data;
 };
 
-// ✅ POST (নতুন ডাটা তৈরি করা)
-export const add_coin = async (data: any) => {
-  const response = await Api.post("/add_coin", data);
-  return response.data;
-};
-
-// ✅ POST (নতুন ডাটা তৈরি করা)
-export const coin_get = async (data: any) => {
-  const response = await Api.post("/coin_get", data);
-  return response.data;
-};
-
-
-
-// ✅ POST (নতুন ডাটা তৈরি করা)
+// ✅ POST (নতুন আইটেম তৈরি করা)
 export const createItem = async (data: any) => {
-  const response = await Api.post("/items", data);
-  return response.data;
+  const { data: res } = await Api.post("/items", data);
+  return res;
 };
-
-
-// ✅ POST (নতুন ডাটা তৈরি করা)
-export const wallate_get = async (data: any) => {
-  const response = await Api.post("/wallate_get", data);
-  return response.data;
-};
-
-
-
 
 // ✅ PUT (ডাটা আপডেট করা by ID)
 export const updateItem = async (id: number | string, data: any) => {
-  const response = await Api.put(`/items/${id}`, data);
-  return response.data;
+  const { data: res } = await Api.put(`/items/${id}`, data);
+  return res;
 };
 
 // ✅ DELETE (ডাটা ডিলিট করা by ID)
 export const deleteItem = async (id: number | string) => {
-  const response = await Api.delete(`/items/${id}`);
-  return response.data;
+  const { data: res } = await Api.delete(`/items/${id}`);
+  return res;
+};
+
+/* =====================
+   🪙 Wallet & Coin APIs
+   ===================== */
+
+// ✅ Add Coin
+export const addCoin = async (data: any) => {
+  const { data: res } = await Api.post("/add_coin", data);
+  return res;
+};
+
+// ✅ Get Coin
+export const getCoin = async (data: any) => {
+  const { data: res } = await Api.post("/coin_get", data);
+  return res;
+};
+
+// ✅ Wallet Get
+export const getWallet = async (data: any) => {
+  const { data: res } = await Api.post("/wallate_get", data);
+  return res;
 };
 
 export default Api;

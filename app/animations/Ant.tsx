@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Api from '../api/Api';
- import { getItems, createItem, updateItem, deleteItem } from "../api/Api";
+
 
 
 // Image paths
@@ -75,7 +75,6 @@ const Creature = ({ id, image, speed, onClick, isFlying }: CreatureProps) => {
 
 export default function CreatureAnimation() {
 
- const [items, setItems] = useState<any[]>([]);
 
 const [uniid, setUnid] = useState(null)
 
@@ -281,7 +280,7 @@ console.log('====================================');
 if (uniid) {
   
 
-        const Res = Api.post("/add_coin", {
+        Api.post("/add_coin", {
  
   user_id:uniid,
   coin:'500',
@@ -292,9 +291,13 @@ if (uniid) {
 
   .then(function (response) {
     toast.success('আপনাকে স্বাগতম  কয়েন সংগ্রহ করার জন্য');
+
+    console.log('====================================');
+    console.log(response.data);
+    console.log('====================================');
   })
   .catch(function (error) {
-  toast.error('আমরা আন্তরীক ভাবে দুঃখিত আপনার কয়েনটি যোগ হচেছ না');
+  toast.error(error+'আমরা আন্তরীক ভাবে দুঃখিত আপনার কয়েনটি যোগ হচেছ না');
   });
 // user_id	refer_id	coin_name	coin_actons	crurrent_time	update_time	coin	shareid	uinq_id	tranztion_id	
 

@@ -26,13 +26,7 @@ import {
   Menu,
   X,
   
-Mail,
-Phone,
-MapPin,
-Settings,
-Edit2,
 
-Star,
 EyeOff,
 Eye,
 Wallet,
@@ -42,6 +36,14 @@ Landmark,
 import { motion, AnimatePresence } from "framer-motion";
 import Api from "@/app/api/Api";
 import { MdNoAccounts } from "react-icons/md";
+
+// Mail,
+// Phone,
+// MapPin,
+// Settings,
+// Edit2,
+
+// Star,
 
 export default function SettingsPage() {
 

@@ -680,359 +680,368 @@
 
 
 
+import React from 'react'
 
-
-"use client";
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Smile, Image as ImageIcon, Check,  Trash2, Video, Phone, Mic, MicOff, X } from "lucide-react";
-
-interface Message {
-  id: number;
-  text: string;
-  sender: "me" | "friend";
-  time: string;
-  avatar: string;
-  img?: string;
-  file?: string;
-  gif?: string;
-  status?: "sent" | "delivered" | "seen";
-  reaction?: string;
-  replyTo?: string;
-}
-
-interface User {
-  id: number;
-  name: string;
-  avatar: string;
-  online: boolean;
-  story?: string;
-}
-
-interface Notification {
-  id: number;
-  text: string;
-}
-
-export default function MessengerFullApp() {
-  const users: User[] = [
-    { id: 1, name: "Ayesha", avatar: "https://i.pravatar.cc/40?u=ayesha", online: true, story:"https://picsum.photos/300/500?random=1" },
-    { id: 2, name: "Mehedi", avatar: "https://i.pravatar.cc/40?u=mehedi", online: false, story:"https://picsum.photos/300/500?random=2" },
-    { id: 3, name: "Jannat", avatar: "https://i.pravatar.cc/40?u=jannat", online: true, story:"https://picsum.photos/300/500?random=3" },
-    { id: 4, name: "Rashidul", avatar: "https://i.pravatar.cc/40?u=rashidul", online: true, story:"https://picsum.photos/300/500?random=4" },
-  ];
-
-  const [activeUser, setActiveUser] = useState<User>(users[0]);
-  const [tabs, setTabs] = useState<User[]>([users[0]]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMsg, setNewMsg] = useState("");
-  const [emojiPicker, setEmojiPicker] = useState(false);
-  const [stickerPicker, setStickerPicker] = useState(false);
-  const [gifPicker, setGifPicker] = useState(false);
-  const [typing, setTyping] = useState(false);
-  const [replyMsg, setReplyMsg] = useState<Message | null>(null);
-  const [storyView, setStoryView] = useState<User | null>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [callModal, setCallModal] = useState<"voice" | "video" | null>(null);
-  const [callTimer, setCallTimer] = useState(0);
-  const [micMuted, setMicMuted] = useState(false);
-
-  const chatEndRef = useRef<HTMLDivElement | null>(null);
-
-  const stickers = ["😎","😂","😍","😭","🎉","💖","🔥","👍","🙏"];
-  const gifs = [
-    "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif",
-    "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif",
-    "https://media.giphy.com/media/26BRzozg4TCBXv6QU/giphy.gif"
-  ];
-
-  // Load messages from localStorage per activeUser
-  useEffect(() => {
-    const saved = localStorage.getItem(`messages-${activeUser.id}`);
-    if (saved) setMessages(JSON.parse(saved));
-    else setMessages([]);
-  }, [activeUser]);
-
-  useEffect(() => {
-    localStorage.setItem(`messages-${activeUser.id}`, JSON.stringify(messages));
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, activeUser]);
-
-  useEffect(() => {
-    let timer: NodeJS.Timer;
-    if (callModal) {
-      timer = setInterval(() => setCallTimer(prev => prev + 1), 1000);
-    } else setCallTimer(0);
-    return () => clearInterval(timer);
-  }, [callModal]);
-
-  const sendMessage = (img?: string, file?: string, sticker?: string, gif?: string) => {
-    if (!newMsg.trim() && !img && !file && !sticker && !gif) return;
-
-    const msg: Message = {
-      id: Date.now(),
-      text: sticker || newMsg,
-      sender: "me",
-      time: new Date().toLocaleTimeString(),
-      avatar: "https://i.pravatar.cc/40?u=me",
-      img,
-      file,
-      gif,
-      status: "sent",
-      replyTo: replyMsg?.text,
-    };
-    setMessages([...messages, msg]);
-    setNewMsg("");
-    setReplyMsg(null);
-    setEmojiPicker(false);
-    setStickerPicker(false);
-    setGifPicker(false);
-
-    // Friend typing simulation & notifications
-    setTyping(true);
-    setTimeout(() => {
-      setTyping(false);
-      const reply: Message = {
-        id: Date.now() + 1,
-        text: img ? "Nice photo!" : sticker ? sticker : gif ? "GIF sent!" : "Reply from " + activeUser.name + ": " + newMsg,
-        sender: "friend",
-        time: new Date().toLocaleTimeString(),
-        avatar: activeUser.avatar,
-        status: "seen",
-      };
-      setMessages((prev) =>
-        prev.map((m) => (m.sender === "me" ? { ...m, status: "delivered" } : m)).concat(reply)
-      );
-      setNotifications((prev) => [...prev, { id: Date.now(), text: activeUser.name + " sent a message" }]);
-      setTimeout(() => setNotifications((prev) => prev.slice(1)), 3000);
-    }, 1500);
-  };
-
-  const addReaction = (id: number, reaction: string) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, reaction } : m))
-    );
-  };
-
-  const deleteMessage = (id: number) => {
-    setMessages((prev) => prev.filter((m) => m.id !== id));
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      if (file.type.startsWith("image/")) sendMessage(url);
-      else sendMessage(undefined, url);
-    }
-  };
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-
-  const addTab = (user: User) => {
-    if (!tabs.find(t => t.id === user.id)) setTabs([...tabs, user]);
-    setActiveUser(user);
-  };
-
+export default function Messangert() {
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-950">
-      {/* Sidebar */}
-      <div className="w-1/4 bg-white dark:bg-gray-900 border-r border-gray-300 dark:border-gray-700 flex flex-col">
-        <h2 className="p-4 font-bold text-lg border-b border-gray-300 dark:border-gray-700">Chats</h2>
-
-        {/* Stories */}
-        <div className="flex gap-3 overflow-x-auto p-2 border-b border-gray-300 dark:border-gray-700">
-          {users.map((u) => (
-            <div key={u.id} className="flex flex-col items-center cursor-pointer">
-              <div className="relative" onClick={() => u.story && setStoryView(u)}>
-                <img src={u.avatar} className="w-12 h-12 rounded-full border-2 border-blue-500" />
-                {u.online && <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>}
-              </div>
-              <span className="text-xs">{u.name}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* User list */}
-        <div className="flex-1 overflow-y-auto">
-          {users.map((user) => (
-            <motion.div
-              key={user.id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={`flex items-center p-3 cursor-pointer ${
-                activeUser.id === user.id ? "bg-gray-200 dark:bg-gray-700" : ""
-              }`}
-              onClick={() => addTab(user)}
-            >
-              <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full mr-3" />
-              <div className="flex flex-col">
-                <span className="font-medium">{user.name}</span>
-                {user.online && <span className="text-xs text-green-500">Online</span>}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Tabs */}
-        <div className="flex bg-gray-200 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700">
-          {tabs.map((tab) => (
-            <div
-              key={tab.id}
-              className={`px-4 py-2 cursor-pointer ${activeUser.id === tab.id ? "bg-white dark:bg-gray-900" : ""}`}
-              onClick={() => setActiveUser(tab)}
-            >
-              {tab.name}
-            </div>
-          ))}
-        </div>
-
-        {/* Header */}
-        <div className="p-4 bg-blue-600 text-white flex justify-between items-center font-bold">
-          <span>{activeUser.name}</span>
-          <div className="flex gap-2">
-            <button onClick={() => setCallModal("voice")}><Phone size={20} /></button>
-            <button onClick={() => setCallModal("video")}><Video size={20} /></button>
-            <button
-              className="bg-red-500 px-2 py-1 rounded hover:bg-red-600"
-              onClick={() => {
-                localStorage.removeItem(`messages-${activeUser.id}`);
-                setMessages([]);
-              }}
-            >
-              Clear Chat
-            </button>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3" onDrop={handleDrop} onDragOver={handleDragOver}>
-          <AnimatePresence initial={false}>
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className={`flex items-end ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
-              >
-                {msg.sender === "friend" && <img src={msg.avatar} className="w-8 h-8 rounded-full mr-2" />}
-                <motion.div layout className={`px-3 py-2 rounded-2xl max-w-xs break-words shadow relative group ${msg.sender === "me" ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-900"}`}>
-                  {msg.replyTo && <div className="bg-gray-200 dark:bg-gray-700 p-1 rounded mb-1 text-xs italic">Reply: {msg.replyTo}</div>}
-                  {msg.img && <img src={msg.img} className="rounded-lg mb-1" />}
-                  {msg.file && <a href={msg.file} target="_blank" className="block text-xs underline mb-1">{msg.file.split("/").pop()}</a>}
-                  {msg.gif && <img src={msg.gif} className="rounded-lg mb-1" />}
-                  <p>{msg.text}</p>
-                  <div className="flex justify-between items-center mt-1 text-xs opacity-70">
-                    <span>{msg.time}</span>
-                    <div className="flex items-center gap-1">
-                      {msg.sender === "me" && (
-                        <span>
-                          {msg.status === "sent" && <Check size={12} />}
-                          {msg.status === "delivered" && <CheckDouble size={12} />}
-                          {msg.status === "seen" && <CheckDouble size={12} className="text-green-500" />}
-                        </span>
-                      )}
-                      <button className="opacity-0 group-hover:opacity-100" onClick={() => deleteMessage(msg.id)}>🗑</button>
-                    </div>
-                  </div>
-                  {msg.reaction && <div className="absolute -top-3 right-0">{msg.reaction}</div>}
-                </motion.div>
-                {msg.sender === "me" && <img src={msg.avatar} className="w-8 h-8 rounded-full ml-2" />}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          <div ref={chatEndRef}></div>
-        </div>
-
-        {typing && <div className="p-2 text-sm text-gray-500 italic">Typing...</div>}
-
-        {/* Input */}
-        <div className="p-3 bg-gray-200 dark:bg-gray-800 flex items-center gap-2">
-          <button onClick={() => setEmojiPicker(!emojiPicker)}>😊</button>
-          <button onClick={() => setStickerPicker(!stickerPicker)}>🎨</button>
-          <button onClick={() => setGifPicker(!gifPicker)}>GIF</button>
-          <input
-            type="text"
-            value={newMsg}
-            onChange={(e) => setNewMsg(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 rounded-full px-4 py-2 outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          />
-          <button onClick={() => sendMessage()} className="px-4 py-2 bg-blue-600 text-white rounded-full">Send</button>
-        </div>
-
-        {/* Emoji / Sticker / GIF */}
-        <AnimatePresence>
-          {emojiPicker && (
-            <motion.div className="p-2 bg-gray-100 dark:bg-gray-900 flex gap-2 flex-wrap"
-              initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}>
-              {stickers.map(s => <button key={s} onClick={() => sendMessage(s)}>{s}</button>)}
-            </motion.div>
-          )}
-          {stickerPicker && (
-            <motion.div className="p-2 bg-gray-100 dark:bg-gray-900 flex gap-2 flex-wrap"
-              initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}>
-              {stickers.map(s => <button key={s} onClick={() => sendMessage(s)}>{s}</button>)}
-            </motion.div>
-          )}
-          {gifPicker && (
-            <motion.div className="p-2 bg-gray-100 dark:bg-gray-900 flex gap-2 overflow-x-auto"
-              initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}>
-              {gifs.map(g => <img key={g} src={g} className="w-20 h-20 rounded cursor-pointer" onClick={() => sendMessage(undefined, undefined, undefined, g)} />)}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Story Viewer */}
-        <AnimatePresence>
-          {storyView && (
-            <motion.div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <motion.div className="relative" initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }}>
-                <img src={storyView.story} className="max-h-[80vh] rounded-lg object-cover" />
-                <button className="absolute top-2 right-2 text-white text-2xl font-bold" onClick={() => setStoryView(null)}>×</button>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Notifications */}
-        <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
-          <AnimatePresence>
-            {notifications.map(n => (
-              <motion.div key={n.id} initial={{ x: 100, opacity:0 }} animate={{ x:0, opacity:1 }} exit={{ x:100, opacity:0 }} className="bg-blue-600 text-white px-4 py-2 rounded shadow">
-                {n.text}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {/* Call Modal */}
-        <AnimatePresence>
-          {callModal && (
-            <motion.div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50"
-              initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
-              <motion.div className="bg-white dark:bg-gray-900 p-6 rounded-lg flex flex-col items-center w-80">
-                <h3 className="text-lg font-bold mb-2">{activeUser.name} is {callModal} calling...</h3>
-                <span className="text-sm mb-4">Timer: {Math.floor(callTimer/60).toString().padStart(2,"0")}:{(callTimer%60).toString().padStart(2,"0")}</span>
-                <div className="flex gap-4">
-                  <button onClick={() => setMicMuted(!micMuted)} className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded flex items-center gap-1">{micMuted ? <MicOff size={16}/> : <Mic size={16}/>}{micMuted ? "Unmute" : "Mute"}</button>
-                  <button onClick={() => setCallModal(null)} className="px-3 py-2 bg-red-600 text-white rounded flex items-center gap-1"><X size={16}/> End</button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-      </div>
-    </div>
-  );
+    <div>Messangert</div>
+  )
 }
+
+
+
+
+// "use client";
+// import { useState, useEffect, useRef } from "react";
+// import { motion, AnimatePresence } from "framer-motion";
+// import { Smile, Image as ImageIcon, Check,  Trash2, Video, Phone, Mic, MicOff, X } from "lucide-react";
+
+// interface Message {
+//   id: number;
+//   text: string;
+//   sender: "me" | "friend";
+//   time: string;
+//   avatar: string;
+//   img?: string;
+//   file?: string;
+//   gif?: string;
+//   status?: "sent" | "delivered" | "seen";
+//   reaction?: string;
+//   replyTo?: string;
+// }
+
+// interface User {
+//   id: number;
+//   name: string;
+//   avatar: string;
+//   online: boolean;
+//   story?: string;
+// }
+
+// interface Notification {
+//   id: number;
+//   text: string;
+// }
+
+// export default function MessengerFullApp() {
+//   const users: User[] = [
+//     { id: 1, name: "Ayesha", avatar: "https://i.pravatar.cc/40?u=ayesha", online: true, story:"https://picsum.photos/300/500?random=1" },
+//     { id: 2, name: "Mehedi", avatar: "https://i.pravatar.cc/40?u=mehedi", online: false, story:"https://picsum.photos/300/500?random=2" },
+//     { id: 3, name: "Jannat", avatar: "https://i.pravatar.cc/40?u=jannat", online: true, story:"https://picsum.photos/300/500?random=3" },
+//     { id: 4, name: "Rashidul", avatar: "https://i.pravatar.cc/40?u=rashidul", online: true, story:"https://picsum.photos/300/500?random=4" },
+//   ];
+
+//   const [activeUser, setActiveUser] = useState<User>(users[0]);
+//   const [tabs, setTabs] = useState<User[]>([users[0]]);
+//   const [messages, setMessages] = useState<Message[]>([]);
+//   const [newMsg, setNewMsg] = useState("");
+//   const [emojiPicker, setEmojiPicker] = useState(false);
+//   const [stickerPicker, setStickerPicker] = useState(false);
+//   const [gifPicker, setGifPicker] = useState(false);
+//   const [typing, setTyping] = useState(false);
+//   const [replyMsg, setReplyMsg] = useState<Message | null>(null);
+//   const [storyView, setStoryView] = useState<User | null>(null);
+//   const [notifications, setNotifications] = useState<Notification[]>([]);
+//   const [callModal, setCallModal] = useState<"voice" | "video" | null>(null);
+//   const [callTimer, setCallTimer] = useState(0);
+//   const [micMuted, setMicMuted] = useState(false);
+
+//   const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+//   const stickers = ["😎","😂","😍","😭","🎉","💖","🔥","👍","🙏"];
+//   const gifs = [
+//     "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif",
+//     "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif",
+//     "https://media.giphy.com/media/26BRzozg4TCBXv6QU/giphy.gif"
+//   ];
+
+//   // Load messages from localStorage per activeUser
+//   useEffect(() => {
+//     const saved = localStorage.getItem(`messages-${activeUser.id}`);
+//     if (saved) setMessages(JSON.parse(saved));
+//     else setMessages([]);
+//   }, [activeUser]);
+
+//   useEffect(() => {
+//     localStorage.setItem(`messages-${activeUser.id}`, JSON.stringify(messages));
+//     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+//   }, [messages, activeUser]);
+
+//   useEffect(() => {
+//     let timer: NodeJS.Timer;
+//     if (callModal) {
+//       timer = setInterval(() => setCallTimer(prev => prev + 1), 1000);
+//     } else setCallTimer(0);
+//     return () => clearInterval(timer);
+//   }, [callModal]);
+
+//   const sendMessage = (img?: string, file?: string, sticker?: string, gif?: string) => {
+//     if (!newMsg.trim() && !img && !file && !sticker && !gif) return;
+
+//     const msg: Message = {
+//       id: Date.now(),
+//       text: sticker || newMsg,
+//       sender: "me",
+//       time: new Date().toLocaleTimeString(),
+//       avatar: "https://i.pravatar.cc/40?u=me",
+//       img,
+//       file,
+//       gif,
+//       status: "sent",
+//       replyTo: replyMsg?.text,
+//     };
+//     setMessages([...messages, msg]);
+//     setNewMsg("");
+//     setReplyMsg(null);
+//     setEmojiPicker(false);
+//     setStickerPicker(false);
+//     setGifPicker(false);
+
+//     // Friend typing simulation & notifications
+//     setTyping(true);
+//     setTimeout(() => {
+//       setTyping(false);
+//       const reply: Message = {
+//         id: Date.now() + 1,
+//         text: img ? "Nice photo!" : sticker ? sticker : gif ? "GIF sent!" : "Reply from " + activeUser.name + ": " + newMsg,
+//         sender: "friend",
+//         time: new Date().toLocaleTimeString(),
+//         avatar: activeUser.avatar,
+//         status: "seen",
+//       };
+//       setMessages((prev) =>
+//         prev.map((m) => (m.sender === "me" ? { ...m, status: "delivered" } : m)).concat(reply)
+//       );
+//       setNotifications((prev) => [...prev, { id: Date.now(), text: activeUser.name + " sent a message" }]);
+//       setTimeout(() => setNotifications((prev) => prev.slice(1)), 3000);
+//     }, 1500);
+//   };
+
+//   const addReaction = (id: number, reaction: string) => {
+//     setMessages((prev) =>
+//       prev.map((m) => (m.id === id ? { ...m, reaction } : m))
+//     );
+//   };
+
+//   const deleteMessage = (id: number) => {
+//     setMessages((prev) => prev.filter((m) => m.id !== id));
+//   };
+
+//   const handleDrop = (e: React.DragEvent) => {
+//     e.preventDefault();
+//     const file = e.dataTransfer.files[0];
+//     if (file) {
+//       const url = URL.createObjectURL(file);
+//       if (file.type.startsWith("image/")) sendMessage(url);
+//       else sendMessage(undefined, url);
+//     }
+//   };
+//   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
+
+//   const addTab = (user: User) => {
+//     if (!tabs.find(t => t.id === user.id)) setTabs([...tabs, user]);
+//     setActiveUser(user);
+//   };
+
+//   return (
+//     <div className="flex h-screen bg-gray-100 dark:bg-gray-950">
+//       {/* Sidebar */}
+//       <div className="w-1/4 bg-white dark:bg-gray-900 border-r border-gray-300 dark:border-gray-700 flex flex-col">
+//         <h2 className="p-4 font-bold text-lg border-b border-gray-300 dark:border-gray-700">Chats</h2>
+
+//         {/* Stories */}
+//         <div className="flex gap-3 overflow-x-auto p-2 border-b border-gray-300 dark:border-gray-700">
+//           {users.map((u) => (
+//             <div key={u.id} className="flex flex-col items-center cursor-pointer">
+//               <div className="relative" onClick={() => u.story && setStoryView(u)}>
+//                 <img src={u.avatar} className="w-12 h-12 rounded-full border-2 border-blue-500" />
+//                 {u.online && <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>}
+//               </div>
+//               <span className="text-xs">{u.name}</span>
+//             </div>
+//           ))}
+//         </div>
+
+//         {/* User list */}
+//         <div className="flex-1 overflow-y-auto">
+//           {users.map((user) => (
+//             <motion.div
+//               key={user.id}
+//               whileHover={{ scale: 1.02 }}
+//               whileTap={{ scale: 0.98 }}
+//               className={`flex items-center p-3 cursor-pointer ${
+//                 activeUser.id === user.id ? "bg-gray-200 dark:bg-gray-700" : ""
+//               }`}
+//               onClick={() => addTab(user)}
+//             >
+//               <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full mr-3" />
+//               <div className="flex flex-col">
+//                 <span className="font-medium">{user.name}</span>
+//                 {user.online && <span className="text-xs text-green-500">Online</span>}
+//               </div>
+//             </motion.div>
+//           ))}
+//         </div>
+//       </div>
+
+//       {/* Chat Area */}
+//       <div className="flex-1 flex flex-col">
+//         {/* Tabs */}
+//         <div className="flex bg-gray-200 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700">
+//           {tabs.map((tab) => (
+//             <div
+//               key={tab.id}
+//               className={`px-4 py-2 cursor-pointer ${activeUser.id === tab.id ? "bg-white dark:bg-gray-900" : ""}`}
+//               onClick={() => setActiveUser(tab)}
+//             >
+//               {tab.name}
+//             </div>
+//           ))}
+//         </div>
+
+//         {/* Header */}
+//         <div className="p-4 bg-blue-600 text-white flex justify-between items-center font-bold">
+//           <span>{activeUser.name}</span>
+//           <div className="flex gap-2">
+//             <button onClick={() => setCallModal("voice")}><Phone size={20} /></button>
+//             <button onClick={() => setCallModal("video")}><Video size={20} /></button>
+//             <button
+//               className="bg-red-500 px-2 py-1 rounded hover:bg-red-600"
+//               onClick={() => {
+//                 localStorage.removeItem(`messages-${activeUser.id}`);
+//                 setMessages([]);
+//               }}
+//             >
+//               Clear Chat
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Messages */}
+//         <div className="flex-1 overflow-y-auto p-4 space-y-3" onDrop={handleDrop} onDragOver={handleDragOver}>
+//           <AnimatePresence initial={false}>
+//             {messages.map((msg) => (
+//               <motion.div
+//                 key={msg.id}
+//                 initial={{ opacity: 0, y: 20 }}
+//                 animate={{ opacity: 1, y: 0 }}
+//                 exit={{ opacity: 0, y: -20 }}
+//                 className={`flex items-end ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
+//               >
+//                 {msg.sender === "friend" && <img src={msg.avatar} className="w-8 h-8 rounded-full mr-2" />}
+//                 <motion.div layout className={`px-3 py-2 rounded-2xl max-w-xs break-words shadow relative group ${msg.sender === "me" ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-900"}`}>
+//                   {msg.replyTo && <div className="bg-gray-200 dark:bg-gray-700 p-1 rounded mb-1 text-xs italic">Reply: {msg.replyTo}</div>}
+//                   {msg.img && <img src={msg.img} className="rounded-lg mb-1" />}
+//                   {msg.file && <a href={msg.file} target="_blank" className="block text-xs underline mb-1">{msg.file.split("/").pop()}</a>}
+//                   {msg.gif && <img src={msg.gif} className="rounded-lg mb-1" />}
+//                   <p>{msg.text}</p>
+//                   <div className="flex justify-between items-center mt-1 text-xs opacity-70">
+//                     <span>{msg.time}</span>
+//                     <div className="flex items-center gap-1">
+//                       {msg.sender === "me" && (
+//                         <span>
+//                           {msg.status === "sent" && <Check size={12} />}
+//                           {msg.status === "delivered" && <CheckDouble size={12} />}
+//                           {msg.status === "seen" && <CheckDouble size={12} className="text-green-500" />}
+//                         </span>
+//                       )}
+//                       <button className="opacity-0 group-hover:opacity-100" onClick={() => deleteMessage(msg.id)}>🗑</button>
+//                     </div>
+//                   </div>
+//                   {msg.reaction && <div className="absolute -top-3 right-0">{msg.reaction}</div>}
+//                 </motion.div>
+//                 {msg.sender === "me" && <img src={msg.avatar} className="w-8 h-8 rounded-full ml-2" />}
+//               </motion.div>
+//             ))}
+//           </AnimatePresence>
+//           <div ref={chatEndRef}></div>
+//         </div>
+
+//         {typing && <div className="p-2 text-sm text-gray-500 italic">Typing...</div>}
+
+//         {/* Input */}
+//         <div className="p-3 bg-gray-200 dark:bg-gray-800 flex items-center gap-2">
+//           <button onClick={() => setEmojiPicker(!emojiPicker)}>😊</button>
+//           <button onClick={() => setStickerPicker(!stickerPicker)}>🎨</button>
+//           <button onClick={() => setGifPicker(!gifPicker)}>GIF</button>
+//           <input
+//             type="text"
+//             value={newMsg}
+//             onChange={(e) => setNewMsg(e.target.value)}
+//             placeholder="Type a message..."
+//             className="flex-1 rounded-full px-4 py-2 outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+//             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+//           />
+//           <button onClick={() => sendMessage()} className="px-4 py-2 bg-blue-600 text-white rounded-full">Send</button>
+//         </div>
+
+//         {/* Emoji / Sticker / GIF */}
+//         <AnimatePresence>
+//           {emojiPicker && (
+//             <motion.div className="p-2 bg-gray-100 dark:bg-gray-900 flex gap-2 flex-wrap"
+//               initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}>
+//               {stickers.map(s => <button key={s} onClick={() => sendMessage(s)}>{s}</button>)}
+//             </motion.div>
+//           )}
+//           {stickerPicker && (
+//             <motion.div className="p-2 bg-gray-100 dark:bg-gray-900 flex gap-2 flex-wrap"
+//               initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}>
+//               {stickers.map(s => <button key={s} onClick={() => sendMessage(s)}>{s}</button>)}
+//             </motion.div>
+//           )}
+//           {gifPicker && (
+//             <motion.div className="p-2 bg-gray-100 dark:bg-gray-900 flex gap-2 overflow-x-auto"
+//               initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}>
+//               {gifs.map(g => <img key={g} src={g} className="w-20 h-20 rounded cursor-pointer" onClick={() => sendMessage(undefined, undefined, undefined, g)} />)}
+//             </motion.div>
+//           )}
+//         </AnimatePresence>
+
+//         {/* Story Viewer */}
+//         <AnimatePresence>
+//           {storyView && (
+//             <motion.div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50"
+//               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+//               <motion.div className="relative" initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }}>
+//                 <img src={storyView.story} className="max-h-[80vh] rounded-lg object-cover" />
+//                 <button className="absolute top-2 right-2 text-white text-2xl font-bold" onClick={() => setStoryView(null)}>×</button>
+//               </motion.div>
+//             </motion.div>
+//           )}
+//         </AnimatePresence>
+
+//         {/* Notifications */}
+//         <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
+//           <AnimatePresence>
+//             {notifications.map(n => (
+//               <motion.div key={n.id} initial={{ x: 100, opacity:0 }} animate={{ x:0, opacity:1 }} exit={{ x:100, opacity:0 }} className="bg-blue-600 text-white px-4 py-2 rounded shadow">
+//                 {n.text}
+//               </motion.div>
+//             ))}
+//           </AnimatePresence>
+//         </div>
+
+//         {/* Call Modal */}
+//         <AnimatePresence>
+//           {callModal && (
+//             <motion.div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50"
+//               initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
+//               <motion.div className="bg-white dark:bg-gray-900 p-6 rounded-lg flex flex-col items-center w-80">
+//                 <h3 className="text-lg font-bold mb-2">{activeUser.name} is {callModal} calling...</h3>
+//                 <span className="text-sm mb-4">Timer: {Math.floor(callTimer/60).toString().padStart(2,"0")}:{(callTimer%60).toString().padStart(2,"0")}</span>
+//                 <div className="flex gap-4">
+//                   <button onClick={() => setMicMuted(!micMuted)} className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded flex items-center gap-1">{micMuted ? <MicOff size={16}/> : <Mic size={16}/>}{micMuted ? "Unmute" : "Mute"}</button>
+//                   <button onClick={() => setCallModal(null)} className="px-3 py-2 bg-red-600 text-white rounded flex items-center gap-1"><X size={16}/> End</button>
+//                 </div>
+//               </motion.div>
+//             </motion.div>
+//           )}
+//         </AnimatePresence>
+
+//       </div>
+//     </div>
+//   );
+// }
 
 
 

@@ -1,6 +1,6 @@
 'use client'
 import Image from 'next/image';
-import {QRCodeCanvas} from 'qrcode.react';
+import {QRCodeSVG} from 'qrcode.react';
 
 export default function Home() {
   const user = {
@@ -47,7 +47,8 @@ export default function Home() {
             </p>
             <div className="my-6">
               {/* ✅ এখন ফোন নম্বর থেকে কিউআর কোড বানাবে */}
-              <QRCodeCanvas  value={user.phone} size={100} />
+              <QRCodeSVG />
+              
             </div>
             <div className="italic mt-4">Yours Sincerely</div>
             <div className="absolute bottom-4 text-xs text-gray-300">

@@ -3,11 +3,9 @@
 import { useState,useEffect } from 'react';
 import { User, Gift, RotateCcw, Users, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Home from './buttomnavbar/page';
+
 
 import CountUp from 'react-countup';
-
-
 
 
 
@@ -47,19 +45,6 @@ const [coissnss, setCoin] = useState(0);
 
 
 
-         const [ imgs, setPimg] = useState('');
-  const [activeNav, setActiveNav] = useState('home');
-
-  
-
-  const navItems = [
-    { id: 'home', label: 'Home', icon: 'home' },
-    { id: 'leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
-    { id: 'refer', label: 'Refer', icon: 'group' },
-    { id: 'profile', label: 'Profile', icon: 'person' },
-  ];
-
-
 
 
 useEffect(() => {
@@ -67,7 +52,7 @@ useEffect(() => {
    const userData = JSON.parse(localStorage.getItem('userData') || '[]');
     if (userData[0]) {
       setUsername(userData[0].name || 'Guest');
-      setPimg(userData[0].img || '');
+     
     }
 
  
