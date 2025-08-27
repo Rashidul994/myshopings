@@ -20,6 +20,8 @@ export default function InstallButton() {
       setShowInstall(true);
     };
 
+
+    
     window.addEventListener('beforeinstallprompt', handler);
 
     // iOS detection

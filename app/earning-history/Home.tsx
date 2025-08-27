@@ -168,7 +168,7 @@
 
 
 
-"use client";
+"use client"
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -182,13 +182,13 @@ export default function LobbyPage() {
 const [id, setUsedrid] = useState(64)
 const [products, setProducts] = useState([])
 
-  const [tables] = useState([
-    { id: 1, available: "3/9", amount: "$1,270" },
-    { id: 2, available: "2/6", amount: "$1,750" },
-    { id: 3, available: "4/8", amount: "$1,750" },
-    { id: 4, available: "2/9", amount: "$1,750" },
-    { id: 5, available: "4/8", amount: "$1,750" },
-  ]);
+  // const [tables] = useState([
+  //   { id: 1, available: "3/9", amount: "$1,270" },
+  //   { id: 2, available: "2/6", amount: "$1,750" },
+  //   { id: 3, available: "4/8", amount: "$1,750" },
+  //   { id: 4, available: "2/9", amount: "$1,750" },
+  //   { id: 5, available: "4/8", amount: "$1,750" },
+  // ]);
 
 
 
@@ -271,8 +271,8 @@ console.log('====================================');
             REFERRAL PROGRAM FOR BEGINNERS
           </h2>
           <p className="text-sm text-purple-200">Send referral code to your friend</p>
-        </div>
-        <img
+        </div>                        
+        <img                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
           src="/king.png" // আপনার ইমেজ দিন
           alt="Referral"
           className="w-16 h-16 drop-shadow-[0_0_15px_#fff]"
@@ -336,7 +336,7 @@ console.log('====================================');
 }
 
 
-function setProducts(message: any) {
-  throw new Error("Function not implemented.");
-}
+// function setProducts(message: any) {
+//   throw new Error("Function not implemented.");
+// }
 
