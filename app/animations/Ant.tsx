@@ -154,7 +154,12 @@ Savesdata();
       setRemovedIds(prev => [...prev, id]);
       setFlyingId(null); // অ্যানিমেশন শেষ
     }, 1000); // ফ্লাই অ্যানিমেশনের সময়
-    setCount(0); // ক্লিক কাউন্ট রিসেট
+    setCount(0); 
+    
+      localStorage.setItem("coin", '500');
+    
+    
+    // ক্লিক কাউন্ট রিসেট
   } else {
     // ❌ না হলে শুধু ফ্লাই করে, মুছে যাবে না
     setTimeout(() => {

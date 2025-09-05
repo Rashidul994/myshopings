@@ -1,6 +1,885 @@
 
 
 
+
+
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { motion } from "framer-motion";
+import { Search, Gift, Bell, Menu, Wallet, X, ScanQrCodeIcon } from "lucide-react";
+import Api from "../api/Api";
+import CountUp from "react-countup";
+import dynamic from "next/dynamic";
+
+
+const QrReader = dynamic(() => import("qrcode.react"), { ssr: false });
+
+export default function LobbyPage() {
+  const [id, setUserid] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [coissnss, setCoin] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showWithdraw, setShowWithdraw] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState("bKash");
+  const [account, setAccount] = useState("");
+  const itemsPerPage = 5;
+
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<string | null>(null);
+
+  const handleScan = (data: string | null) => {
+    if (data) {
+      setScanResult(data);
+      setScanning(false);
+    }
+  };
+
+  const handleError = (err: any) => {
+    console.error(err);
+  };
+
+  // Coin update interval
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const cojs = localStorage.getItem("coin");
+      setCoin(cojs ? Number(cojs) : 0);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Load userData
+  useEffect(() => {
+ const userData = JSON.parse(localStorage.getItem('userData') || '[]');
+    if (userData[0]) {
+      setUserid(userData[0].id || 'no name fine');
+      
+    }
+  }, [id]);
+
+  // API call
+  const getUser = useCallback(() => {
+    if (!id) return;
+    setLoading(true);
+    setError("");
+    Api.get(`/orderget/${id}`)
+      .then((res) => {
+        setProducts(res.data.data || []);
+      })
+      .catch((err) => {
+        console.error("Earning History Error:", err);
+        setError("Something went wrong while loading data.");
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    getUser();
+  }, [id, getUser]);
+
+  const totalPages = Math.max(1, Math.ceil(products.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = products.slice(startIndex, startIndex + itemsPerPage);
+
+  // Withdraw Submit
+  const handleWithdraw = async () => {
+    try {
+      await Api.post(
+        "/withdraw",
+        { amount, method, account_number: account },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+      alert("Withdraw request sent!");
+      setShowWithdraw(false);
+      setAmount("");
+      setAccount("");
+    } catch (err) {
+      console.error(err);
+      alert("Withdraw failed!");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white p-4 font-sans pb-24 flex flex-col max-w-md mx-auto">
+      {/* Top Bar */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-extrabold text-orange-500 drop-shadow-[0_0_10px_#ff6a00]">
+          R <sub className="text-sm">coin</sub>
+        </h1>
+        <div className="flex gap-4">
+          <button
+            className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#a855f7]"
+            onClick={() => setScanning(true)}
+          >
+            <ScanQrCodeIcon className="w-5 h-5 text-purple-400" />
+          </button>
+          <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#a855f7]">
+            <Gift className="w-5 h-5 text-purple-400" />
+          </button>
+          <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#facc15]">
+            <Bell className="w-5 h-5 text-yellow-400" />
+          </button>
+          <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#fb923c]">
+            <Menu className="w-5 h-5 text-orange-400" />
+          </button>
+        </div>
+      </div>
+
+      {/* Referral Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mt-6 bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-500 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_20px_#9333ea]"
+      >
+        <img
+          src="../../Icon/Rcoin (2).png"
+          alt="Referral"
+          className="w-16 h-16 drop-shadow-[0_0_15px_#fff]"
+        />
+        <div className="text-right">
+          <p className="text-sm font-bold drop-shadow-[0_0_6px_#fff]">
+            Current Balance
+          </p>
+          <h1 className="text-4xl font-extrabold mt-1 drop-shadow-md">
+            <CountUp end={coissnss} duration={2} separator="," />
+          </h1>
+        </div>
+      </motion.div>
+
+      {/* Withdraw Button */}
+      <motion.button
+        whileHover={{ scale: 1.05, boxShadow: "0 0 15px #9333ea" }}
+        className="w-full mt-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition flex items-center justify-center gap-2"
+        onClick={() => setShowWithdraw(true)}
+      >
+        <Wallet className="w-5 h-5 text-purple-400" />
+        Money Withdraw
+      </motion.button>
+
+      {/* Withdraw Modal */}
+      {showWithdraw && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-sm relative">
+            <button
+              onClick={() => setShowWithdraw(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-red-400"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-purple-400">
+              Withdraw Money
+            </h2>
+            <input
+              type="number"
+              placeholder="Enter Amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="border border-gray-700 bg-gray-800 p-2 w-full rounded mb-2"
+            />
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              className="border border-gray-700 bg-gray-800 p-2 w-full rounded mb-2"
+            >
+              <option value="bKash">bKash</option>
+              <option value="Nagad">Nagad</option>
+              <option value="Rocket">Rocket</option>
+              <option value="Bank">Bank Transfer</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Account Number"
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
+              className="border border-gray-700 bg-gray-800 p-2 w-full rounded mb-4"
+            />
+            <button
+              onClick={handleWithdraw}
+              className="w-full py-2 rounded bg-gradient-to-r from-purple-600 to-indigo-500 hover:shadow-[0_0_15px_#9333ea] transition"
+            >
+              Confirm Withdraw
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Live Tables */}
+      <div className="mt-6">
+        <h2 className="text-lg font-bold text-cyan-400 drop-shadow-[0_0_6px_#22d3ee]">
+          LIVE DATA {id}
+        </h2>
+
+        <div className="flex justify-between mt-3">
+          <button className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-lg hover:shadow-[0_0_12px_#22d3ee]">
+        
+
+
+ <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              className="border border-gray-700 bg-gray-800 p-2 w-full rounded mb-2"
+            >
+              <option value="all earning">earning list</option>
+              <option value="game">game earning </option>
+              <option value="allorder">order list</option>
+
+            </select>
+
+
+
+
+          </button>
+          <button className="bg-gray-800 px-3 py-2 rounded-lg hover:shadow-[0_0_12px_#a855f7]">
+            See more 
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-4">
+          {loading && <p className="text-center text-gray-400 animate-pulse">Loading tables...</p>}
+          {error && <p className="text-center text-red-400">{error}</p>}
+          {!loading && !error && products.length === 0 && (
+            <p className="text-center text-gray-500">No tables found.</p>
+          )}
+
+          {!loading &&
+            !error &&
+            currentItems.map((item, index) => (
+              <motion.div
+                key={item.id || index}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, boxShadow: "0 0 20px #9333ea" }}
+                className="flex items-center justify-between bg-gray-900 rounded-xl p-3 border border-purple-700/30"
+              >
+                <div>
+                  <p className="text-sm text-gray-400">{item.status}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-purple-400 font-bold drop-shadow-[0_0_8px_#9333ea]">
+                    {item.id}
+                  </span>
+                  <button className="px-4 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 hover:shadow-[0_0_15px_#9333ea] transition">
+                    JOIN
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+
+          {!loading && !error && products.length > 0 && (
+            <div className="flex justify-center gap-2 mt-4">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 bg-gray-700 rounded-lg disabled:opacity-40"
+              >
+                Prev
+              </button>
+              <span className="px-3 py-1 text-purple-400">
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 bg-gray-700 rounded-lg disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      </div>
+
+     
+  );
+}
+
+
+
+
+
+
+// "use client";
+
+// import { useEffect, useState, useCallback } from "react";
+// import { motion } from "framer-motion";
+// import { Search, Gift, Bell, Menu, Wallet, X, ScanQrCodeIcon  } from "lucide-react";
+// import Api from "../api/Api";
+// import CountUp from "react-countup";
+// import dynamic from "next/dynamic";
+
+
+
+
+
+
+
+// export default function LobbyPage() {
+//   const [id, setUserId] = useState("64");
+//   const [products, setProducts] = useState([]);
+//   const [coissnss, setCoin] = useState(0);
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState("");
+//   const [showWithdraw, setShowWithdraw] = useState(false); // ✅ Withdraw modal toggle
+//   const [amount, setAmount] = useState("");
+//   const [method, setMethod] = useState("bKash");
+//   const [account, setAccount] = useState("");
+//   const itemsPerPage = 5;
+
+
+// // react-qr-reader dynamically import করতে হবে (Next.js ssr সমস্যা এড়াতে)
+// const QrReader = dynamic(() => import("react-qr-reader"), { ssr: false });
+
+
+// const [scanning, setScanning] = useState(false);
+//   const [scanResult, setScanResult] = useState<string | null>(null);
+
+//   const handleScan = (data: string | null) => {
+//     if (data) {
+//       setScanResult(data);
+//       setScanning(false); // স্ক্যান হয়ে গেলে ক্যামেরা বন্ধ হবে
+//     }
+//   };
+
+//   const handleError = (err: any) => {
+//     console.error(err);
+//   };
+
+
+
+
+
+
+//   // Coin update interval
+//   useEffect(() => {
+//     const interval = setInterval(() => {
+//       const cojs = localStorage.getItem("coin");
+//       setCoin(cojs ? Number(cojs) : 0);
+//     }, 3000);
+//     return () => clearInterval(interval);
+//   }, []);
+
+//   // Load userData
+//   useEffect(() => {
+//     const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+//     if (userData?.id) {
+//       setUserId(userData.id);
+//     }
+//   }, []);
+
+//   // API call
+//   const getUser = useCallback(() => {
+//     if (!id) return;
+//     setLoading(true);
+//     setError("");
+//     Api.get(`/orderget/${id}`)
+//       .then((res) => {
+//         setProducts(res.data.data || []);
+//       })
+//       .catch((err) => {
+//         console.error("Earning History Error:", err);
+//         setError("Something went wrong while loading data.");
+//       })
+//       .finally(() => setLoading(false));
+//   }, [id]);
+
+//   useEffect(() => {
+//     getUser();
+//   }, [id, getUser]);
+
+//   const totalPages = Math.max(1, Math.ceil(products.length / itemsPerPage));
+//   const startIndex = (currentPage - 1) * itemsPerPage;
+//   const currentItems = products.slice(startIndex, startIndex + itemsPerPage);
+
+//   // ✅ Withdraw Submit
+//   const handleWithdraw = async () => {
+//     try {
+//       await Api.post(
+//         "/withdraw",
+//         { amount, method, account_number: account },
+//         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+//       );
+//       alert("Withdraw request sent!");
+//       setShowWithdraw(false);
+//       setAmount("");
+//       setAccount("");
+//     } catch (err) {
+//       console.error(err);
+//       alert("Withdraw failed!");
+//     }
+//   };
+
+
+//   const cameragetid=()=>{
+
+
+
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white p-4 font-sans pb-24 flex flex-col max-w-md mx-auto">
+//       {/* Top Bar */}
+//       <div className="flex items-center justify-between">
+//         <h1 className="text-3xl font-extrabold text-orange-500 drop-shadow-[0_0_10px_#ff6a00]">
+//           R <sub className="text-sm">coin</sub>
+//         </h1>
+//         <div className="flex gap-4">
+//           <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#a855f7]">
+//             <ScanQrCodeIcon   onClick={()=>cameragetid()} className="w-5 h-5 text-purple-400" />
+//           </button>
+
+//           <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#a855f7]">
+//             <Gift className="w-5 h-5 text-purple-400" />
+//           </button>
+//           <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#facc15]">
+//             <Bell className="w-5 h-5 text-yellow-400" />
+//           </button>
+//           <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#fb923c]">
+//             <Menu className="w-5 h-5 text-orange-400" />
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Referral Banner */}
+//       <motion.div
+//         initial={{ opacity: 0, y: 40 }}
+//         animate={{ opacity: 1, y: 0 }}
+//         transition={{ duration: 0.6 }}
+//         className="mt-6 bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-500 
+//         rounded-2xl p-4 flex items-center justify-between shadow-[0_0_20px_#9333ea]"
+//       >
+//         <img
+//           src="../../Icon/Rcoin (2).png"
+//           alt="Referral"
+//           className="w-16 h-16 drop-shadow-[0_0_15px_#fff]"
+//         />
+//         <div className="text-right">
+//           <p className="text-sm font-bold drop-shadow-[0_0_6px_#fff]">
+//             Current Balance
+//           </p>
+//           <h1 className="text-4xl font-extrabold mt-1 drop-shadow-md">
+//             <CountUp end={coissnss} duration={2} separator="," />
+//           </h1>
+//         </div>
+//       </motion.div>
+
+//       {/* Withdraw Button */}
+//       <motion.button
+//         whileHover={{ scale: 1.05, boxShadow: "0 0 15px #9333ea" }}
+//         className="w-full mt-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition flex items-center justify-center gap-2"
+//         onClick={() => setShowWithdraw(true)}
+//       >
+//         <Wallet className="w-5 h-5 text-purple-400" />
+//         Money Withdraw
+//       </motion.button>
+
+//       {/* Withdraw Modal */}
+//       {showWithdraw && (
+//         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+//           <div className="bg-gray-900 p-6 rounded-2xl w-full max-w-sm relative">
+//             <button
+//               onClick={() => setShowWithdraw(false)}
+//               className="absolute top-3 right-3 text-gray-400 hover:text-red-400"
+//             >
+//               <X className="w-5 h-5" />
+//             </button>
+//             <h2 className="text-xl font-bold mb-4 text-purple-400">
+//               Withdraw Money
+//             </h2>
+//             <input
+//               type="number"
+//               placeholder="Enter Amount"
+//               value={amount}
+//               onChange={(e) => setAmount(e.target.value)}
+//               className="border border-gray-700 bg-gray-800 p-2 w-full rounded mb-2"
+//             />
+//             <select
+//               value={method}
+//               onChange={(e) => setMethod(e.target.value)}
+//               className="border border-gray-700 bg-gray-800 p-2 w-full rounded mb-2"
+//             >
+//               <option value="bKash">bKash</option>
+//               <option value="Nagad">Nagad</option>
+//               <option value="Rocket">Rocket</option>
+//               <option value="Bank">Bank Transfer</option>
+//             </select>
+//             <input
+//               type="text"
+//               placeholder="Account Number"
+//               value={account}
+//               onChange={(e) => setAccount(e.target.value)}
+//               className="border border-gray-700 bg-gray-800 p-2 w-full rounded mb-4"
+//             />
+//             <button
+//               onClick={handleWithdraw}
+//               className="w-full py-2 rounded bg-gradient-to-r from-purple-600 to-indigo-500 hover:shadow-[0_0_15px_#9333ea] transition"
+//             >
+//               Confirm Withdraw
+//             </button>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Live Tables */}
+//       <div className="mt-6">
+//         <h2 className="text-lg font-bold text-cyan-400 drop-shadow-[0_0_6px_#22d3ee]">
+//           LIVE TABLES {id}
+//         </h2>
+
+//         <div className="flex justify-between mt-3">
+//           <button className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-lg hover:shadow-[0_0_12px_#22d3ee]">
+//             <Search className="w-4 h-4" /> Search table
+//           </button>
+//           <button className="bg-gray-800 px-3 py-2 rounded-lg hover:shadow-[0_0_12px_#a855f7]">
+//             See more
+//           </button>
+//         </div>
+
+//         <div className="mt-4 space-y-4">
+//           {loading && (
+//             <p className="text-center text-gray-400 animate-pulse">
+//               Loading tables...
+//             </p>
+//           )}
+
+//           {error && <p className="text-center text-red-400">{error}</p>}
+
+//           {!loading && !error && products.length === 0 && (
+//             <p className="text-center text-gray-500">No tables found.</p>
+//           )}
+
+//           {!loading &&
+//             !error &&
+//             currentItems.map((item, index) => (
+//               <motion.div
+//                 key={index}
+//                 initial={{ opacity: 0, y: 30 }}
+//                 animate={{ opacity: 1, y: 0 }}
+//                 transition={{ delay: index * 0.1 }}
+//                 whileHover={{ scale: 1.02, boxShadow: "0 0 20px #9333ea" }}
+//                 className="flex items-center justify-between bg-gray-900 rounded-xl p-3 border border-purple-700/30"
+//               >
+//                 <div>
+//                   <p className="text-sm text-gray-400">{item.status}</p>
+//                 </div>
+//                 <div className="flex items-center gap-3">
+//                   <span className="text-purple-400 font-bold drop-shadow-[0_0_8px_#9333ea]">
+//                     {item.id}
+//                   </span>
+//                   <button className="px-4 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 hover:shadow-[0_0_15px_#9333ea] transition">
+//                     JOIN
+//                   </button>
+//                 </div>
+//               </motion.div>
+//             ))}
+
+//           {!loading && !error && products.length > 0 && (
+//             <div className="flex justify-center gap-2 mt-4">
+//               <button
+//                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+//                 disabled={currentPage === 1}
+//                 className="px-3 py-1 bg-gray-700 rounded-lg disabled:opacity-40"
+//               >
+//                 Prev
+//               </button>
+//               <span className="px-3 py-1 text-purple-400">
+//                 {currentPage} / {totalPages}
+//               </span>
+//               <button
+//                 onClick={() =>
+//                   setCurrentPage((p) => Math.min(p + 1, totalPages))
+//                 }
+//                 disabled={currentPage === totalPages}
+//                 className="px-3 py-1 bg-gray-700 rounded-lg disabled:opacity-40"
+//               >
+//                 Next
+//               </button>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//   <div className="p-4">
+//       {/* Scan Button */}
+//       <button
+//         onClick={() => setScanning(true)}
+//         className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg"
+//       >
+//         <ScanQrCodeIcon className="w-5 h-5 text-white" />
+//         Scan QR
+//       </button>
+
+//       {/* QR Scanner Modal */}
+//       {scanning && (
+//         <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+//           <div className="bg-white p-4 rounded-lg shadow-lg">
+//             <QrReader
+//               delay={300}
+//               onError={handleError}
+//               onScan={handleScan}
+//               style={{ width: "300px" }}
+//             />
+//             <button
+//               onClick={() => setScanning(false)}
+//               className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
+//             >
+//               Close
+//             </button>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Result */}
+//       {scanResult && (
+//         <div className="mt-4 p-2 border rounded bg-gray-100">
+//           <p className="text-sm">Scanned Value:</p>
+//           <p className="font-bold text-purple-600">{scanResult}</p>
+//         </div>
+//       )}
+//     </div>
+
+
+
+
+
+
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+// "use client";
+
+// import { useEffect, useState, useCallback } from "react";
+// import { motion } from "framer-motion";
+// import { Search, Gift, Bell, Menu, Wallet } from "lucide-react";
+// import Api from "../api/Api";
+// import CountUp from "react-countup";
+
+// export default function LobbyPage() {
+//   const [id, setUserId] = useState("64");
+//   const [products, setProducts] = useState([]);
+//   const [coissnss, setCoin] = useState(0);
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [loading, setLoading] = useState(false); // ✅ Loading state
+//   const [error, setError] = useState(""); // ✅ Error state
+//   const itemsPerPage = 5;
+
+//   // Coin update interval
+//   useEffect(() => {
+//     const interval = setInterval(() => {
+//       const cojs = localStorage.getItem("coin");
+//       setCoin(cojs ? Number(cojs) : 0);
+//     }, 3000);
+//     return () => clearInterval(interval);
+//   }, []);
+
+//   // Load userData
+//   useEffect(() => {
+//     const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+//     if (userData?.id) {
+//       setUserId(userData.id);
+//     }
+//   }, []);
+
+//   // API call
+//   const getUser = useCallback(() => {
+//     if (!id) return;
+//     setLoading(true);
+//     setError("");
+//     Api.get(`/orderget/${id}`)
+//       .then((res) => {
+//         setProducts(res.data.data || []);
+//       })
+//       .catch((err) => {
+//         console.error("Earning History Error:", err);
+//         setError("Something went wrong while loading data.");
+//       })
+//       .finally(() => setLoading(false));
+//   }, [id]);
+
+//   useEffect(() => {
+//     getUser();
+//   }, [id, getUser]);
+
+//   const totalPages = Math.max(1, Math.ceil(products.length / itemsPerPage));
+//   const startIndex = (currentPage - 1) * itemsPerPage;
+//   const currentItems = products.slice(startIndex, startIndex + itemsPerPage);
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white p-4 font-sans pb-24 flex flex-col max-w-md mx-auto">
+//       {/* Top Bar */}
+//       <div className="flex items-center justify-between">
+//         <h1 className="text-3xl font-extrabold text-orange-500 drop-shadow-[0_0_10px_#ff6a00]">
+//           R <sub className="text-sm">coin</sub>
+//         </h1>
+//         <div className="flex gap-3">
+//           <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#a855f7]">
+//             <Gift className="w-5 h-5 text-purple-400" />
+//           </button>
+//           <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#facc15]">
+//             <Bell className="w-5 h-5 text-yellow-400" />
+//           </button>
+//           <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#fb923c]">
+//             <Menu className="w-5 h-5 text-orange-400" />
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Referral Banner */}
+//       <motion.div
+//         initial={{ opacity: 0, y: 40 }}
+//         animate={{ opacity: 1, y: 0 }}
+//         transition={{ duration: 0.6 }}
+//         className="mt-6 bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-500 
+//         rounded-2xl p-4 flex items-center justify-between shadow-[0_0_20px_#9333ea]"
+//       >
+//         <img
+//           src="../../Icon/Rcoin (2).png"
+//           alt="Referral"
+//           className="w-16 h-16 drop-shadow-[0_0_15px_#fff]"
+//         />
+//         <div className="text-right">
+//           <p className="text-sm font-bold drop-shadow-[0_0_6px_#fff]">
+//             Current Balance
+//           </p>
+//           <h1 className="text-4xl font-extrabold mt-1 drop-shadow-md">
+//             <CountUp end={coissnss} duration={2} separator="," />
+//           </h1>
+//         </div>
+//       </motion.div>
+
+//       {/* Show More */}
+//       <motion.button
+   
+//         whileHover={{ scale: 1.05, boxShadow: "0 0 15px #9333ea" }}
+//         className="w-full mt-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition "
+//       >
+//         <p>
+
+//     money withdraw
+//     <Wallet className="items-center" />
+
+
+//         </p>
+ 
+//       </motion.button>
+
+//       {/* Live Tables */}
+//       <div className="mt-6">
+//         <h2 className="text-lg font-bold text-cyan-400 drop-shadow-[0_0_6px_#22d3ee]">
+//           LIVE TABLES {id}
+//         </h2>
+
+//         <div className="flex justify-between mt-3">
+//           <button className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-lg hover:shadow-[0_0_12px_#22d3ee]">
+//             <Search className="w-4 h-4" /> Search table
+//           </button>
+//           <button className="bg-gray-800 px-3 py-2 rounded-lg hover:shadow-[0_0_12px_#a855f7]">
+//             See more
+//           </button>
+//         </div>
+
+//         <div className="mt-4 space-y-4">
+//           {/* ✅ Loading Indicator */}
+//           {loading && (
+//             <p className="text-center text-gray-400 animate-pulse">
+//               Loading tables...
+//             </p>
+//           )}
+
+//           {/* ✅ Error Message */}
+//           {error && (
+//             <p className="text-center text-red-400">{error}</p>
+//           )}
+
+//           {/* ✅ If no data */}
+//           {!loading && !error && products.length === 0 && (
+//             <p className="text-center text-gray-500">No tables found.</p>
+//           )}
+
+//           {/* ✅ Show Data */}
+//           {!loading &&
+//             !error &&
+//             currentItems.map((item, index) => (
+//               <motion.div
+//                 key={index}
+//                 initial={{ opacity: 0, y: 30 }}
+//                 animate={{ opacity: 1, y: 0 }}
+//                 transition={{ delay: index * 0.1 }}
+//                 whileHover={{ scale: 1.02, boxShadow: "0 0 20px #9333ea" }}
+//                 className="flex items-center justify-between bg-gray-900 rounded-xl p-3 border border-purple-700/30"
+//               >
+//                 <div>
+//                   <p className="text-sm text-gray-400">{item.status}</p>
+//                 </div>
+//                 <div className="flex items-center gap-3">
+//                   <span className="text-purple-400 font-bold drop-shadow-[0_0_8px_#9333ea]">
+//                     {item.id}
+//                   </span>
+//                   <button className="px-4 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 hover:shadow-[0_0_15px_#9333ea] transition">
+//                     JOIN
+//                   </button>
+//                 </div>
+//               </motion.div>
+//             ))}
+
+//           {/* Pagination */}
+//           {!loading && !error && products.length > 0 && (
+//             <div className="flex justify-center gap-2 mt-4">
+//               <button
+//                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+//                 disabled={currentPage === 1}
+//                 className="px-3 py-1 bg-gray-700 rounded-lg disabled:opacity-40"
+//               >
+//                 Prev
+//               </button>
+//               <span className="px-3 py-1 text-purple-400">
+//                 {currentPage} / {totalPages}
+//               </span>
+//               <button
+//                 onClick={() =>
+//                   setCurrentPage((p) => Math.min(p + 1, totalPages))
+//                 }
+//                 disabled={currentPage === totalPages}
+//                 className="px-3 py-1 bg-gray-700 rounded-lg disabled:opacity-40"
+//               >
+//                 Next
+//               </button>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // "use client";
 // import { motion } from "framer-motion";
 
@@ -168,172 +1047,239 @@
 
 
 
-"use client"
+// "use client"
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Search, Gift, Bell, Menu } from "lucide-react";
-import Api from "../api/Api";
-
-
-export default function LobbyPage() {
+// import { useEffect, useState } from "react";
+// import { motion } from "framer-motion";
+// import { Search, Gift, Bell, Menu } from "lucide-react";
+// import Api from "../api/Api";
+// import CountUp from "react-countup";
 
 
-const [id, setUsedrid] = useState(64)
-const [products, setProducts] = useState([])
-
-  // const [tables] = useState([
-  //   { id: 1, available: "3/9", amount: "$1,270" },
-  //   { id: 2, available: "2/6", amount: "$1,750" },
-  //   { id: 3, available: "4/8", amount: "$1,750" },
-  //   { id: 4, available: "2/9", amount: "$1,750" },
-  //   { id: 5, available: "4/8", amount: "$1,750" },
-  // ]);
+// export default function LobbyPage() {
 
 
+// const [id, setUsedrid] = useState([])
+// const [products, setProducts] = useState([])
 
-  useEffect(() => {
+//   // const [tables] = useState([
+//   //   { id: 1, available: "3/9", amount: "$1,270" },
+//   //   { id: 2, available: "2/6", amount: "$1,750" },
+//   //   { id: 3, available: "4/8", amount: "$1,750" },
+//   //   { id: 4, available: "2/9", amount: "$1,750" },
+//   //   { id: 5, available: "4/8", amount: "$1,750" },
+//   // ]);
 
-   const userData = JSON.parse(localStorage.getItem('userData') || '[]');
-    if (userData[0]) {
-      setUsedrid(userData[0].id || 'Guest');
+
+// const [coissnss, setCoin] = useState(0);
+
+
+
+
+
+// useEffect(() => {
+ 
+
+
+ 
+// setInterval(() => {
+//   const cojs=localStorage.getItem('coin');
+// setCoin(cojs);
+// }, 3000);
+
+// })
+
+//   useEffect(() => {
+
+//    const userData = JSON.parse(localStorage.getItem('userData') || '[]');
+//     if (userData[0]) {
+//       setUsedrid(userData[0].id || '64');
     
-    }
+//     }
 
 
-  getUser();
-  }, [])
+//   getUser();
+//   }, [id])
 
 
 
-  const getUser= () =>{
+//   const getUser= () =>{
 
-  Api.get(`/orderget/${id}`)
-  .then(res =>{
+//   Api.get(`/orderget/${id}`)
+//   .then(res =>{
     
 
   
- setProducts(res.data.data);
+//  setProducts(res.data.data);
 
    
 
-console.log(' R co earning r coin====================================');
-console.log(res.data);
-console.log('====================================');
-})
-  .catch(err => 
+// console.log(' R co earning r coin====================================');
+// console.log(res.data);
+// console.log('====================================');
+// })
+//   .catch(err => 
     
     
-    console.log('  r coin  RRRRRRRRRRR Coooooinnnnnnnnnn    errrrrrrorrrrrrrrrrrrrrrrrrrrrrrrr'+err));
+//     console.log('       Earning History      r coin  RRRRRRrrrrrrr'+err));
 
-}
-
-
+// }
 
 
 
 
 
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const itemsPerPage = 5;
+
+//   // মোট কতগুলো পেজ হবে
+//   const totalPages = Math.ceil(products.length / itemsPerPage);
+
+//   // কোন কোন ডাটা দেখানো হবে (slice করে)
+//   const startIndex = (currentPage - 1) * itemsPerPage;
+//   const currentItems = products.slice(startIndex, startIndex + itemsPerPage);
 
 
 
-  return (
+
+
+//   return (
     
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white p-4 font-sanspb-24 flex flex-col max-w-md mx-auto">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold text-orange-500 drop-shadow-[0_0_10px_#ff6a00]">
-          R <sub className="text-sm">coin</sub>
-        </h1>
-        <div className="flex gap-3">
-          <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#a855f7]">
-            <Gift className="w-5 h-5 text-purple-400" />
-          </button>
-          <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#facc15]">
-            <Bell className="w-5 h-5 text-yellow-400" />
-          </button>
-          <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#fb923c]">
-            <Menu className="w-5 h-5 text-orange-400" />
-          </button>
-        </div>
-      </div>
+//     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white p-4 font-sanspb-24 flex flex-col max-w-md mx-auto">
+//       {/* Top Bar */}
+//       <div className="flex items-center justify-between">
+//         <h1 className="text-3xl font-extrabold text-orange-500 drop-shadow-[0_0_10px_#ff6a00]">
+//           R <sub className="text-sm">coin</sub>
+//         </h1>
+//         <div className="flex gap-3">
+//           <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#a855f7]">
+//             <Gift className="w-5 h-5 text-purple-400" />
+//           </button>
+//           <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#facc15]">
+//             <Bell className="w-5 h-5 text-yellow-400" />
+//           </button>
+//           <button className="bg-gray-800 p-2 rounded-full hover:shadow-[0_0_15px_#fb923c]">
+//             <Menu className="w-5 h-5 text-orange-400" />
+//           </button>
+//         </div>
+//       </div>
 
-      {/* Referral Banner */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mt-6 bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-500 
-        rounded-2xl p-4 flex items-center justify-between shadow-[0_0_20px_#9333ea]"
-      >
-        <div>
-          <h2 className="text-lg font-bold drop-shadow-[0_0_6px_#fff]">
-            REFERRAL PROGRAM FOR BEGINNERS
-          </h2>
-          <p className="text-sm text-purple-200">Send referral code to your friend</p>
-        </div>                        
-        <img                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
-          src="/king.png" // আপনার ইমেজ দিন
-          alt="Referral"
-          className="w-16 h-16 drop-shadow-[0_0_15px_#fff]"
-        />
-      </motion.div>
+//       {/* Referral Banner */}
+//       <motion.div
+//         initial={{ opacity: 0, y: 40 }}
+//         animate={{ opacity: 1, y: 0 }}
+//         transition={{ duration: 0.6 }}
+//         className="mt-6 bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-500 
+//         rounded-2xl p-4 flex items-center justify-between shadow-[0_0_20px_#9333ea]"
+//       >
 
-      {/* Show More */}
-      <motion.button
-        whileHover={{ scale: 1.05, boxShadow: "0 0 15px #9333ea" }}
-        className="w-full mt-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition"
-      >
-        Show more
-      </motion.button>
 
-      {/* Live Tables */}
-      <div className="mt-6">
-        <h2 className="text-lg font-bold text-cyan-400 drop-shadow-[0_0_6px_#22d3ee]">
-          LIVE TABLES
-        </h2>
+//          <img                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+//           src='../../Icon/Rcoin (2).png'
+//           alt="Referral"
+//           className="w-16 h-16 drop-shadow-[0_0_15px_#fff]"
+//         />
 
-        <div className="flex justify-between mt-3">
-          <button className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-lg hover:shadow-[0_0_12px_#22d3ee]">
-            <Search className="w-4 h-4" /> Search table
-          </button>
-          <button className="bg-gray-800 px-3 py-2 rounded-lg hover:shadow-[0_0_12px_#a855f7]">
-            See more
-          </button>
-        </div>
 
-        <div className="mt-4 space-y-4">
-          {products.map((table) => (
-            <motion.div
-              key={table.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: table.id * 0.1 }}
-              whileHover={{ scale: 1.02, boxShadow: "0 0 20px #9333ea" }}
-              className="flex items-center justify-between bg-gray-900 rounded-xl p-3 border border-purple-700/30"
-            >
-              <div>
-                <p className="text-sm text-gray-400">
-                  Available 
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-purple-400 font-bold drop-shadow-[0_0_8px_#9333ea]">
-                  
 
-                  
-                </span>
-                <button className="px-4 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 hover:shadow-[0_0_15px_#9333ea] transition">
-                  JOIN
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+ 
+      
+    
+
+//        <p className="text-sm font-semibold tracking-wide font-bold drop-shadow-[0_0_6px_#fff]">Current Balance</p>
+          
+//           <h2 className="text-lg font-bold drop-shadow-[0_0_6px_#fff]">
+//      <h1 className="text-4xl font-extrabold mt-1 drop-shadow-md"><CountUp end={coissnss} duration={2} separator="," /></h1>
+       
+//           </h2>
+//             <div>
+//         </div>                        
+       
+//       </motion.div>
+
+//       {/* Show More */}
+//       <motion.button
+//         whileHover={{ scale: 1.05, boxShadow: "0 0 15px #9333ea" }}
+//         className="w-full mt-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition"
+//       >
+//         Show more
+//       </motion.button>
+
+//       {/* Live Tables */}
+//       <div className="mt-6">
+//         <h2 className="text-lg font-bold text-cyan-400 drop-shadow-[0_0_6px_#22d3ee]">
+//           LIVE TABLES  {id}
+//         </h2>
+
+//         <div className="flex justify-between mt-3">
+//           <button className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-lg hover:shadow-[0_0_12px_#22d3ee]">
+//             <Search className="w-4 h-4" /> Search table
+//           </button>
+//           <button className="bg-gray-800 px-3 py-2 rounded-lg hover:shadow-[0_0_12px_#a855f7]">
+//             See more
+//           </button>
+//         </div>
+
+//         <div className="mt-4 space-y-4">
+//               {currentItems.map((item, index) => (
+//         <motion.div
+//           key={index}
+//           initial={{ opacity: 0, y: 30 }}
+//           animate={{ opacity: 1, y: 0 }}
+//           transition={{ delay: index * 0.1 }}
+//           whileHover={{ scale: 1.02, boxShadow: "0 0 20px #9333ea" }}
+//           className="flex items-center justify-between bg-gray-900 rounded-xl p-3 border border-purple-700/30"
+//         >
+//           <div>
+//             <p className="text-sm text-gray-400">     {item.status}</p>
+//           </div>
+//           <div className="flex items-center gap-3">
+//             <span className="text-purple-400 font-bold drop-shadow-[0_0_8px_#9333ea]">
+//               {item.id}
+//             </span>
+//             <button className="px-4 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 hover:shadow-[0_0_15px_#9333ea] transition">
+//               JOIN
+//             </button>
+//           </div>
+//         </motion.div>
+//       ))}
+
+
+
+
+
+
+
+//       {/* Pagination Buttons */}
+//       <div className="flex justify-center gap-2 mt-4">
+//         <button
+//           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+//           disabled={currentPage === 1}
+//           className="px-3 py-1 bg-gray-700 rounded-lg disabled:opacity-40"
+//         >
+//           Prev
+//         </button>
+//         <span className="px-3 py-1 text-purple-400">
+//           {currentPage} / {totalPages}
+//         </span>
+//         <button
+//           onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+//           disabled={currentPage === totalPages}
+//           className="px-3 py-1 bg-gray-700 rounded-lg disabled:opacity-40"
+//         >
+//           Next
+//         </button>
+//       </div>
+
+
+
+
+      
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
 
 
 // function setProducts(message: any) {

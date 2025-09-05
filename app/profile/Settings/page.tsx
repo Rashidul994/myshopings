@@ -168,7 +168,7 @@ useEffect(() => {
   ];
 
   // সেভ ফাংশন (সিমুলেশন)
-  function fakeSave(section, data) {
+  function fakeSave(section: string, data: any) {
     setSaving((s) => ({ ...s, [section]: true }));
     setSavedMsg((s) => ({ ...s, [section]: "" }));
     setTimeout(() => {

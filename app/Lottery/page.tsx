@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Api from "../api/Api";
 
 export default function CasinoPage() {
   // ডেমো ডেটা: পরবর্তীতে API থেকে ডেটা লোড করার জন্য এই কাঠামো ব্যবহার করা যাবে।
@@ -20,7 +21,7 @@ export default function CasinoPage() {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
-  const [availablePlayers, setAvailablePlayers] = useState(initialPlayers);
+  const [availablePlayers, setAvailablePlayers] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const wheelRef = useRef(null);
 
@@ -49,15 +50,64 @@ export default function CasinoPage() {
     }, duration);
   };
 
+
+
+
+
+
+  
+
+
   useEffect(() => {
+
+getus();
+console.log('=========dynamick dat array===========================');
+console.log(availablePlayers);
+console.log('====================================');
+
+
+
+
     const handleKey = (e) => {
       if (e.key === "Enter") {
         spin();
       }
+
+
+
+
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [spinning, availablePlayers]);
+
+
+
+
+
+
+
+  const getus=()=>{
+
+
+    Api.get(`/all_users`)
+      .then((res) => {
+   
+       console.log(res.data);
+       setAvailablePlayers(res.data.data);
+      })
+      .catch((err) => {
+        console.error("Earning History Error:", err);
+
+      })
+      .finally(() => 
+
+  console.log('not error data finally get data')
+
+      );
+
+
+}
 
   const pocketsElements = availablePlayers.map((p, i) => {
     const degPer = 360 / availablePlayers.length;

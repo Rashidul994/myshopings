@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 
 
 import CountUp from 'react-countup';
+import { redirect } from 'next/navigation';
+
 
 
 
@@ -18,13 +20,9 @@ export default function WalletPage() {
   //   const { name, balance, coin, setUser  } = useUserStore();
 
   const handleSend = () => {
-  //   setUser({
-  //     name: "ras",
-      
-  //     balance: 500,
-  //     coin: 1500,
+    
  
-
+redirect('/earning-history');
 
 
 };
